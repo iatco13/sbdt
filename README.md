@@ -15,7 +15,7 @@ This sandbox demonstrates the cyber-physical synergy between a **Physics-Informe
 To run the simulations, you need Python 3.8+ installed. Install the required optimization and deep learning libraries:
 
 ```bash
-pip install torch numpy pandas pulp highspy matplotlib
+pip install torch numpy pandas pulp highspy matplotlib scipy
 ```
 *(Note: `highspy` provides pre-compiled Python bindings for the HiGHS solver, enabling ultra-fast convergence for the MILP matrix).*
 
