@@ -1,85 +1,74 @@
 # 🚜 Sugar Beet Digital Twin: Cyber-Physical Supply Chain PoC
 
-**Related Paper:** *Building Cyber-Physical Resilient Regional Supply Chains: Physics-Informed Neural Networks and Model Predictive Control in Stochastic Environments*
+**Related Paper:** *Building Cyber-Physical Resilient Regional Supply Chains: Physics-Informed Neural Networks and Model Predictive Control in Stochastic Environments*  
+**Author:** Corneliu Iatco (Academy of Economic Studies of Moldova / Südzucker Moldova SRL)
 
 ## 📌 Overview
-This repository contains a **Standalone Algorithmic Proof-of-Concept (PoC)** to accompany the research paper. To ensure open scientific reproducibility without violating Corporate Non-Disclosure Agreements (NDA), we have extracted the core mathematical engines of the Digital Twin and isolated them from the enterprise Event-Driven Architecture (EDA).
+This repository contains a **Standalone Algorithmic Proof-of-Concept (PoC)** developed to accompany the research paper. To ensure open scientific reproducibility without violating Corporate Non-Disclosure Agreements (NDA), the core mathematical engines of the Digital Twin have been isolated from the enterprise Event-Driven Architecture (EDA). 
 
-This sandbox environment focuses strictly on the mathematical viability, matrix compactness, and computational convergence speed of the proposed algorithms.
-
-## 🗂️ Repository Structure
-
-The repository is divided into two synergistic computational modules:
-
-### 1. Macro-Routing & Scheduling Core (`run_simulation.ipynb` / `run_simulation.py`)
-This script contains the core Mixed-Integer Linear Programming (MILP) heuristic (Forward-Backward Scheduling) described in **Section 3.2** of the paper.
-* **Objective:** Minimization of macro-systemic transportation and relocation expenditures.
-* **Scale:** Simulates an extreme peak-day scenario with 10 MAUS loaders, 350 fields, and 2 factories (yielding exactly 7,000 binary variables and 360 structural constraints).
-* **Execution:** Strictly single-threaded (`threads=1`) using the open-source HiGHS solver to ensure hardware-agnostic reproducibility and fair academic benchmarking. Expected convergence time is under 0.5 seconds on a standard laptop.
-
-### 2. Physics-Informed Neural Network (PINN) Sandbox (`pinn_training.ipynb` / `pinn_training.py`)
-This script provides a standalone PyTorch implementation of the PINN module (as defined in **Eq. 28** and **Eq. 29** of the manuscript).
-* **Objective:** Predicts non-linear biochemical sucrose degradation in field piles when empirical laboratory data is sporadic or heavily delayed (Laboratory Blind Spots).
-* **Mechanism:** The neural network embeds a complex Ordinary Differential Equation (ODE) via `torch.autograd`. It models the transition from smooth early-stage cellular respiration (Arrhenius kinetics) to exponential late-stage microbiological decay ($\alpha \cdot t^2$).
-* **Integration:** Calculates the daily degradation penalty coefficient ($\Delta S_j^t$), which is dynamically forwarded to the MILP core for Smart Triage and priority evacuation.
+This sandbox demonstrates the cyber-physical synergy between a **Physics-Informed Neural Network (PINN)** (used for predicting non-linear biochemical degradation of raw materials) and a **Mixed-Integer Linear Programming (MILP)** heuristic core (used for macro-routing and Smart Triage).
 
 ---
 
-## ⚠️ Architecture Disclaimer (What this PoC is NOT)
-As detailed in the manuscript, the actual production-grade Digital Twin operates within a complex multi-tier architecture. To make this code easily executable for peer reviewers, the following enterprise-grade middleware has been deliberately stripped out:
-* **Event-Driven Automation:** Message brokers and asynchronous triggers have been replaced by sequential script execution.
-* **Database Integration:** Direct queries to corporate ERPs and Azure Data Lakes have been replaced with static, synthetically generated datasets.
-* **Hardware Acceleration:** GPU-clusters are disabled to demonstrate raw algorithmic efficiency on standard CPUs.
+## 🛠 Prerequisites and Installation
 
-*Note: In a full simulated production environment, the entire pipeline (including PINN fine-tuning, neural inference, and MILP optimization) combined with Azure Data Lake synchronization executes reliably within a 15-minute window.*
-
----
-
-## 🛠 Prerequisites and Required Libraries
-
-To run the scripts or Jupyter Notebooks, you need Python 3.8+ installed on your system. Install all required mathematical, optimization, and deep learning libraries using `pip`:
+To run the simulations, you need Python 3.8+ installed. Install the required optimization and deep learning libraries:
 
 ```bash
-pip install pulp pandas numpy jupyter highspy torch matplotlib
+pip install torch numpy pandas pulp highspy matplotlib
 ```
-
-*Note: The `highspy` package provides pre-compiled Python bindings for the HiGHS solver, which allows `PuLP` to run HiGHS directly out-of-the-box on most systems.*
+*(Note: `highspy` provides pre-compiled Python bindings for the HiGHS solver, enabling ultra-fast convergence for the MILP matrix).*
 
 ---
 
-## ▶️ How to Run the Simulations
+## ▶️ Execution Workflow
 
-1. Clone or download this repository to your local machine.
-2. Open your terminal or command prompt in the repository directory.
-3. Launch Jupyter Notebook (or run the `.py` scripts directly via terminal):
-   ```bash
-   jupyter notebook
-   ```
+The system is designed as a two-stage sequential pipeline. You must run the PINN training script first to generate the predictive weights and physical parameters, which are then consumed by the MILP logistics solver.
 
-### Running the PINN Model:
-* Open `pinn_training.ipynb` and execute the cells.
-* Observe the `Total Loss` dropping as the Physics Loss ($\mathcal{L}_{PDE}$) guides the network.
-* At the end of the execution, the script will output the calculated Daily Sucrose Loss ($\Delta S_j^t$), triggering the Smart Triage logic.
+### Step 1: Train the Neural Network Predictor
+Run the physics-informed training module to simulate the biochemical degradation of sucrose in field piles over time:
+```bash
+python pinn_training.py
+```
+This script trains a compact neural network (2 hidden layers, 64 neurons) using a custom loss function ($\mathcal{L}_{PDE}$) that penalizes the AI for violating Arrhenius thermodynamics and microbiological decay laws. 
 
-### Running the MILP Core:
-* Open `run_simulation.ipynb` and execute the cells.
-* Observe the structural generation of 7,000 variables and 360 constraints.
-* Check the **Convergence Time** (expected ~0.45 seconds) and the optimal macro-routing dispatch directives.
+### Step 2: Execute the MILP Routing Core
+Once the PINN model is trained and saved, launch the logistics optimizer:
+```bash
+python run_simulation.py
+```
+This script loads the pre-trained `.pth` weights, generates a real-time meteorological snapshot for 350 field piles, queries the PINN for the daily sucrose loss rate ($\Delta S_j^t$), and dynamically injects these degradation penalties into the routing objective function. The HiGHS solver will then generate and solve a matrix of ~7,000 variables and 360 constraints, algorithmically prioritizing the evacuation of rotting raw materials (Smart Triage).
+
+---
+
+## 🗂️ Data Structure & File Description
+
+The repository operates on a strict Input/Output data pipeline. Below is the description of the initial datasets required for training, as well as the artifacts generated by the system.
+
+### 📥 Input Data (Empirical E-Layer)
+*   `pinn_data.csv` **(Empirical Training Dataset):** The foundational historical dataset representing the empirical transactional layer (E-layer) discussed in the paper. It contains sporadic, delayed laboratory measurements of root crop sucrose digestion ($S_{lab,k}$), paired with corresponding storage durations and temperature profiles. This file is strictly required to compute the empirical data loss component ($\mathcal{L}_{data}$) during the PINN training phase (Eq. 28).
+
+### 🧠 Generated Model Weights & Parameters
+*   `pinn_sucrose_model.pth` **(PyTorch weights):** The serialized state dictionary of the trained PINN. Contains the optimized neural network weights (~4000 parameters) that have successfully learned the non-linear degradation dynamics. It is dynamically loaded by `run_simulation.py` for real-time inference (Eq. 29).
+*   `pinn_physics_params.json` **(Physical constants):** A configuration file storing the kinetic and thermodynamic constants used during training (e.g., the Arrhenius pre-exponential factor $A$, activation energy $E_a$, and microbiological acceleration coefficient $\alpha$). 
+
+### 📊 Generated Tabular Data
+*   `pinn_predictions.csv` **(Sucrose and loss rates):** A detailed dataset containing the neural network's day-by-day predictions. It includes the absolute predicted sucrose concentration ($S_t$) and the calculated daily loss rate ($\Delta S_j^t$).
+*   `normative_target.csv` **(Ground truth from norms):** The baseline dataset representing standard, theoretical degradation norms. It serves as the mathematical baseline against which the PINN's predictive accuracy is validated.
+
+### 📈 Visualizations & Plots
+*   `pinn_loss_curve.png` **(Training loss):** A convergence plot illustrating the minimization of the global loss function over 8000 epochs. It demonstrates how the Physics Loss ($\mathcal{L}_{PDE}$) guides the network.
+*   `pinn_results.png` **(Sucrose comparison + loss rate):** A visual comparison of the PINN-predicted sucrose degradation trajectory versus the empirical/normative baseline, highlighting the exponential "avalanche" decay.
+*   `pinn_temperature.png` **(Temperature profile):** A graph showing the simulated internal temperature fluctuations within the field piles over the storage period.
 
 ---
 
 ## ✒️ Authorship & Citation
 
-**Author:** Corneliu Iatco, Academy of Economic Studies of Moldova (ASEM).
+If you use this code, algorithms, or the synthetic datasets in your own research, please cite the original manuscript:
 
-This codebase is released as supplementary material for the academic paper. If you use these algorithms, logic, or the synthetic datasets in your own research and simulations, please cite the original manuscript:
-
-> **Iatco, C. (2026).** *Building Cyber-Physical Resilient Regional Supply Chains: Physics-Informed Neural Networks and Model Predictive Control in Stochastic Environments.* Smart Cities and Regional Development (SCRD) Journal. DOI: [To be added upon publication]
-
----
+> **Iatco, C. (2026).** *Building Cyber-Physical Resilient Regional Supply Chains: Physics-Informed Neural Networks and Model Predictive Control in Stochastic Environments.* Smart Cities and Regional Development (SCRD) Journal.
 
 ## 📄 License
 
-This Proof-of-Concept is open-sourced under the **MIT License**. 
-
-You are free to use, modify, distribute, and run this academic sandbox for your own research, educational, and testing purposes. The software is provided "as is", without warranty of any kind. For more details, see the standard MIT License terms.
+This Proof-of-Concept is open-sourced under the **MIT License**. You are free to use, modify, distribute, and run this academic sandbox for your own research, educational, and testing purposes.
