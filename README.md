@@ -17,7 +17,11 @@ To run the simulations, you need Python 3.8+ installed. Install the required opt
 ```bash
 pip install torch numpy pandas pulp highspy matplotlib scipy
 ```
-*(Note: `highspy` provides pre-compiled Python bindings for the HiGHS solver, enabling ultra-fast convergence for the MILP matrix).*
+
+**⚙️ Solver Configuration Note:**
+By default, this repository uses the `highspy` package, which provides pre-compiled Python bindings for the HiGHS solver, enabling ultra-fast convergence for the MILP matrix. 
+
+*Alternative Standalone Installation:* If you encounter any environment-specific issues with the Python bindings, you can download the standalone, pre-compiled **HiGHS binaries** directly from their official website or GitHub releases page. Simply extract the executable and ensure it is added to your operating system's `PATH` variable. The `PuLP` library will automatically detect the local solver and route the mathematical matrix accordingly.
 
 ---
 
